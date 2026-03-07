@@ -236,3 +236,43 @@ class ListDirTool(Tool):
             return f"Error: {e}"
         except Exception as e:
             return f"Error listing directory: {str(e)}"
+
+class CountLinesTool(Tool):
+    """Tool to count lines in a file."""
+
+    def __init__(self, workspace: Path | None = None, allowed_dir: Path | None = None):
+        self._workspace = workspace
+        self._allowed_dir = allowed_dir
+
+    @property
+    def name(self) -> str:
+        return "count_lines"
+
+    @property
+    def description(self) -> str:
+        return "Count the number of lines in a file."
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {"path": {"type": "string", "description": "The file path to count lines"}},
+            "required": ["path"],
+        }
+
+    async def execute(self, path: str, **kwargs: Any) -> str:
+        try:
+            file_path = _resolve_path(path, self._workspace, self._allowed_dir)
+            if not file_path.exists():
+                return f"Error: File not found: {path}"
+            if not file_path.is_file():
+                return f"Error: Not a file: {path}"
+
+            with file_path.open(encoding="utf-8") as f:
+                line_count = sum(1 for _ in f)
+
+            return f"{line_count} lines in {path}"
+        except PermissionError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Error counting lines: {str(e)}"
